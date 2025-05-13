@@ -1,0 +1,27 @@
+# Ignore node_modules folder and its contents
+node_modules/
+
+# Ignore all .log files
+*.log
+
+# Ignore temp directory and its contents
+temp/
+
+# Ignore .env files containing environment variables
+.env
+
+# Ignore build artifacts
+build/
+dist/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore Python bytecode files
+*.pyc
+__pycache__/
+
+# Specific file exceptions
+!important.log
+!/path/to/keep/
