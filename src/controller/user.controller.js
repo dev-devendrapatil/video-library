@@ -110,10 +110,25 @@ export const logoutUser = asyncHandler(async(req,res,next) =>{
   }
   res.status(200).json(new ApiResponse(200,response,"User Logout"))
 })
+export const changePassword=asyncHandler(async (req,res,next) => {
+    const {password,newPassword}=req.body
+    console.log("in")
+    if([password,newPassword].some((item)=>item.trim()=="")){
+      throw new ApiError(400,"All fields are required")
+    }
+    const user =await User.findById(req.user._id)
+    const isPasswordCorrect = await user.isPasswordCorrect(password)
+    if(!isPasswordCorrect){
+      throw new ApiError(400,"Invalid Credentials")
+    }
+    user.password=newPassword
+    user.save()
+    res.status(201).json(new ApiResponse(201,user,"Password changed successfully"))
+  })
 
 export const regenerateAccessToken = asyncHandler(async(req,res,next)=>{
-try {
-    const oldRefreshToken=req.body.accessToken||req.cookies;
+
+    const oldRefreshToken=req.body?.refreshToken||req.cookies.refreshToken;
     if(!oldRefreshToken){
       throw new ApiError(403,"Invalid Request")
     }
@@ -122,21 +137,24 @@ try {
       throw new ApiError(403,"Invalid Request")
     }
     const user = await User.findById(decodeOldRefreshToken._id)
+    console.log(user)
     if(!user){
       throw new ApiError(403,"Invalid Request")
     }
+    console.log("oldRefreshToken",oldRefreshToken)
     if(oldRefreshToken!==user.refreshToken){
       throw new ApiError(403,"Invalid Request")
     }
+    console.log("hi")
     const newRefreshToken = await user.generateRefreshToken()
+    console.log("newRefreshToken",newRefreshToken)
     const newAccessToken = await user.generateAccessToken()
     const response = {
       userName:user.userName,
       newAccessToken,
       newRefreshToken
     }
-    res.status(200).json(ApiResponse(200,response,"New token generated"))
-} catch (error) {
-  res.status(500).json(ApiResponse(500,error.message,"Something went wrong"))
-}
+    res.status(200).json(new ApiResponse(200,response,"New token generated"))
+
 })
+
