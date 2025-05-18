@@ -2,7 +2,6 @@ import handleRegistration from "../service/user/user.register.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
-
 import { userSchemaValidator } from "../validators/user/user.register.validator.js";
 import handleLogin from "../service/user/user.login.service.js";
 import { loginValidator } from "../validators/user/user.login.validator.js";
@@ -14,6 +13,10 @@ import handleUpdateUser from "../service/user/user.update.service.js";
 import { handleAvatarChange } from "../service/user/user.changeAvatar.service.js";
 import handleCoverImageChange from "../service/user/user.changeCoverImage.service.js";
 import handleTokenRegeneration from "../service/user/user.tokenRegeneration.service.js";
+import mongoose from "mongoose";
+import { User } from "../models/user.model.js";
+import getChannel from "../service/user/user.getChannel.service.js";
+import getUserHistory from "../service/user/user.getHistory.service.js";
 export const registerUser = asyncHandler(async (req, res, next) => {
   if (!req?.files?.avatar[0]?.path) {
     throw new ApiError(400, "avatar is required");
@@ -88,11 +91,11 @@ export const userDetails = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, req.user, "User details fetch successfully"));
 });
 export const updateUser = asyncHandler(async (req, res, next) => {
-      const {error,value} =  userUpdateValidator.validate(req.body)
+  const { error, value } = userUpdateValidator.validate(req.body);
   if (error) {
     throw new ApiError(400, error.details[0].message);
   }
-  const user = await handleUpdateUser(value,req.user)
+  const user = await handleUpdateUser(value, req.user);
   res.status(201).json(new ApiResponse(201, user, "User updated successfully"));
 });
 export const updateAvatar = asyncHandler(async (req, res, next) => {
@@ -101,7 +104,11 @@ export const updateAvatar = asyncHandler(async (req, res, next) => {
   if (!newAvatarLocalFilePath) {
     throw new ApiError(400, "Please upload image");
   }
-  const user  = await handleAvatarChange(req.user,newAvatarLocalFilePath,oldAvatarServerFilePath)
+  const user = await handleAvatarChange(
+    req.user,
+    newAvatarLocalFilePath,
+    oldAvatarServerFilePath
+  );
 
   res
     .status(201)
@@ -114,8 +121,12 @@ export const updateCoverImage = asyncHandler(async (req, res, next) => {
   if (!localCoverImagePath) {
     throw new ApiError(400, "Please upload image");
   }
-  const user = await handleCoverImageChange(req.user,localCoverImagePath,oldCoverImageServerPath)
-  
+  const user = await handleCoverImageChange(
+    req.user,
+    localCoverImagePath,
+    oldCoverImageServerPath
+  );
+
   res
     .status(200)
     .json(new ApiResponse(200, user, "Cover Image updated successfully"));
@@ -125,7 +136,22 @@ export const regenerateAccessToken = asyncHandler(async (req, res, next) => {
   if (!oldRefreshToken) {
     throw new ApiError(403, "Invalid Request");
   }
-  const response=await handleTokenRegeneration(oldRefreshToken)
+  const response = await handleTokenRegeneration(oldRefreshToken);
 
   res.status(200).json(new ApiResponse(200, response, "New token generated"));
+});
+
+export const getChannelProfile = asyncHandler(async (req, res, next) => {
+  const { userName } = req.body;
+  if (!userName?.trim()) {
+    throw new ApiError(400, "Username missing");
+  }
+  const channel = await getChannel(userName.trim())
+  res.status(200).json(200, channel, "User channel fetch successfully");
+});
+
+export const getWatchHistory = asyncHandler(async (req, res, next) => {
+ const userHistory = await getUserHistory(req.user.id)
+
+  res.status(200).json(new ApiResponse(200,userHistory,"watch history fetch successfully"))
 });
