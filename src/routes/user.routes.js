@@ -22,7 +22,7 @@ userRouter.post(
 userRouter.post('/login',loginUser)
 userRouter.post('/logout',auth,logoutUser)
 userRouter.post('/changePassword',auth,changePassword)
-userRouter.post('/regenerateToken',regenerateAccessToken)
+userRouter.get('/regenerateToken',regenerateAccessToken)
 userRouter.get('/userDetails',auth,userDetails)
 userRouter.patch('/updateUser',auth,updateUser)
 userRouter.patch('/updateAvatar',auth,upload.single('avatar'),updateAvatar)

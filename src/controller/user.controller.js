@@ -1,81 +1,47 @@
 import { User } from "../models/user.modal.js";
+import handleRegistration from "../service/user/user.register.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { deleteImageFromUrl, uploadOnCloudinary } from "../utils/cloudnary.js";
 import jwt from "jsonwebtoken";
+import { userSchemaValidator } from "../validators/user/user.register.validator.js";
+import handleLogin from "../service/user/user.login.service.js";
+import { loginValidator } from "../validators/user/user.login.validator.js";
+import handleLogout from "../service/user/user.logout.service.js";
+import { passwordValidator } from "../validators/user/user.changePassword.validator.js";
+import handlePasswordChange from "../service/user/user.changePassword.service.js";
+import { userUpdateValidator } from "../validators/user/user.update.validator.js";
+import handleUpdateUser from "../service/user/user.update.service.js";
+import { handleAvatarChange } from "../service/user/user.changeAvatar.service.js";
+import handleCoverImageChange from "../service/user/user.changeCoverImage.service.js";
+import handleTokenRegeneration from "../service/user/user.tokenRegeneration.service.js";
 export const registerUser = asyncHandler(async (req, res, next) => {
-  const { fullName, userName, email, password } = req.body;
-  if (
-    [fullName, userName, email, password].some((item) => item?.trim() == "")
-  ) {
-    throw new ApiError(400, "All fields are required");
+  if (!req?.files?.avatar[0]?.path) {
+    throw new ApiError(400, "avatar is required");
   }
-  const isUserAlreadyExist = await User.findOne({
-    $or: [
-      {
-        userName: userName,
-      },
-      {
-        email: email,
-      },
-    ],
-  });
-  if (isUserAlreadyExist) {
-    throw new ApiError(400, "User already exists");
+  const { error, value } = userSchemaValidator.validate(req.body);
+  if (error) {
+    throw new ApiError(400, error.details[0].message);
   }
-  const avatarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
-  if (!avatarLocalPath) {
-    throw new ApiError(400, "Avatar is required");
-  }
-  const avatar = await uploadOnCloudinary(avatarLocalPath);
-  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-  if (!avatar) {
-    throw new ApiError(400, "Avatar is required");
-  }
-  const user = await new User({
-    fullName,
-    avatar: avatar.url,
-    coverImage: coverImage?.url || "",
-    email,
-    password,
-    userName,
-  });
-  await user.save();
-  const createdUser = await User.findById(user._id).select(
-    "-password -refreshToken"
+  const avatarLocalPath = req?.files?.avatar[0]?.path;
+  const coverImageLocalPath = req?.files?.coverImage[0]?.path;
+  const newUser = await handleRegistration(
+    value,
+    avatarLocalPath,
+    coverImageLocalPath
   );
-  if (!createdUser) {
-    throw new ApiError(500, "Something went wrong");
-  }
   res
     .status(201)
-    .json(new ApiResponse(200, createdUser, "User registered successfully"));
+    .json(new ApiResponse(200, newUser, "User registered successfully"));
 });
 
 export const loginUser = asyncHandler(async (req, res, next) => {
-  const { userName, email, password } = req.body;
-  const user = await User.findOne({
-    $or: [
-      {
-        userName,
-      },
-      {
-        email,
-      },
-    ],
-  });
-  if (!user) {
+  const { error, value } = loginValidator.validate(req.body);
+  if (error) {
     throw new ApiError(400, "Invalid credentials");
   }
-  if (!(await user.isPasswordCorrect(password))) {
-    throw new ApiError(400, "Invalid Credentials");
-  }
-  const refreshToken = await user.generateRefreshToken();
-  const accessToken = await user.generateAccessToken();
-  user.refreshToken = refreshToken;
-  await user.save();
+  const { refreshToken, accessToken } = await handleLogin(value);
   const options = {
     httpOnly: true,
     secure: true,
@@ -97,35 +63,20 @@ export const loginUser = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(200, response, "User Logged in successfully"));
 });
 export const logoutUser = asyncHandler(async (req, res, next) => {
-  const updateUser = await User.findOneAndUpdate(
-    {
-      _id: req.user._id,
-    },
-    {
-      $set: {
-        refreshToken: undefined,
-      },
-    }
-  );
+  const updatedUser = await handleLogout(req.user);
   res.clearCookie("refreshToken");
   res.clearCookie("accessToken");
   const response = {
-    user: updateUser,
+    user: updatedUser,
   };
   res.status(200).json(new ApiResponse(200, response, "User Logout"));
 });
 export const changePassword = asyncHandler(async (req, res, next) => {
-  const { password, newPassword } = req.body;
-  if ([password, newPassword].some((item) => item.trim() == "")) {
-    throw new ApiError(400, "All fields are required");
+  const { error, value } = passwordValidator.validate(req.body);
+  if (error) {
+    throw new ApiError(400, error.details[0].message);
   }
-  const user = await User.findById(req.user._id);
-  const isPasswordCorrect = await user.isPasswordCorrect(password);
-  if (!isPasswordCorrect) {
-    throw new ApiError(400, "Invalid Credentials");
-  }
-  user.password = newPassword;
-  user.save();
+  const user = await handlePasswordChange(value, req.user);
   res
     .status(201)
     .json(new ApiResponse(201, user, "Password changed successfully"));
@@ -138,104 +89,45 @@ export const userDetails = asyncHandler(async (req, res, next) => {
     .status(200)
     .json(new ApiResponse(200, req.user, "User details fetch successfully"));
 });
-export const updateUser = asyncHandler(async (req, res, params) => {
-  const { userName, email, fullName } = req.body;
-  if (
-    [userName, email, fullName].every(
-      (item) => item?.trim().length == 0 || !item
-    )
-  ) {
-    throw new ApiError(400, "No fields received for edit");
+export const updateUser = asyncHandler(async (req, res, next) => {
+      const {error,value} =  userUpdateValidator.validate(req.body)
+  if (error) {
+    throw new ApiError(400, error.details[0].message);
   }
-  const user = await User.findById(req.user._id).select(
-    "-password -refreshToken"
-  );
-  if (!user) {
-    throw new ApiError(400, "Problem while updating the user");
-  }
-  if (userName && userName?.trim().length !== 0) {
-    user.userName = userName;
-  }
-  if (email && email?.trim().length !== 0) {
-    user.email = email;
-  }
-  if (fullName && fullName?.trim().length !== 0) {
-    user.fullName = fullName;
-  }
-  await user.save();
+  const user = await handleUpdateUser(value,req.user)
   res.status(201).json(new ApiResponse(201, user, "User updated successfully"));
 });
-export const updateAvatar = asyncHandler(async (req, res, params) => {
-  const newAvatarLocalFilePath = req.file?.path;
+export const updateAvatar = asyncHandler(async (req, res, next) => {
+  const newAvatarLocalFilePath = req?.file?.path;
   const oldAvatarServerFilePath = req.user.avatar;
   if (!newAvatarLocalFilePath) {
     throw new ApiError(400, "Please upload image");
   }
-  const user = await User.findById(req.user._id).select(
-    "-password -refreshToken"
-  );
-  if (!user) {
-    throw new ApiError(400, "User not found");
-  }
-  const newAvatarOnServer = await uploadOnCloudinary(newAvatarLocalFilePath);
-  if (!newAvatarOnServer) {
-    throw new ApiError(500, "Error while uploading image");
-  }
-  user.avatar = newAvatarOnServer.url;
-  await user.save();
-  if (oldAvatarServerFilePath) {
-    deleteImageFromUrl(oldAvatarServerFilePath);
-  }
-  res.status(201)
+  const user  = await handleAvatarChange(req.user,newAvatarLocalFilePath,oldAvatarServerFilePath)
+
+  res
+    .status(201)
     .json(new ApiResponse(201, user, "Avatar updated successfully"));
 });
-export const updateCoverImage = asyncHandler(async (req,res,next) => {
-    const localCoverImagePath = req.file?.path
-      const oldCoverImageServerPath = req.user.coverImage;
+export const updateCoverImage = asyncHandler(async (req, res, next) => {
+  const localCoverImagePath = req.file?.path;
+  const oldCoverImageServerPath = req.user.coverImage;
 
-    if(!localCoverImagePath){
-      throw new ApiError(400,"Please upload image")
-    }
-      const user = await User.findById(req.user._id).select(
-    "-password -refreshToken"
-  );
-  if (!user) {
-    throw new ApiError(400, "User not found");
+  if (!localCoverImagePath) {
+    throw new ApiError(400, "Please upload image");
   }
-  const newCoverImage=await uploadOnCloudinary(localCoverImagePath)
-  if(!newCoverImage){
-    throw new ApiError(400,"Issue while uploading image")
-  }
-  user.coverImage=newCoverImage.url
-  await user.save()
-  deleteImageFromUrl(oldCoverImageServerPath)
-  res.status(200).json(new ApiResponse(200,user,"Cover Image updated successfully"))
-})
+  const user = await handleCoverImageChange(req.user,localCoverImagePath,oldCoverImageServerPath)
+  
+  res
+    .status(200)
+    .json(new ApiResponse(200, user, "Cover Image updated successfully"));
+});
 export const regenerateAccessToken = asyncHandler(async (req, res, next) => {
   const oldRefreshToken = req.body?.refreshToken || req.cookies.refreshToken;
   if (!oldRefreshToken) {
     throw new ApiError(403, "Invalid Request");
   }
-  const decodeOldRefreshToken = jwt.decode(
-    oldRefreshToken,
-    process.env.APP_REFRESH_TOKEN_SECRET
-  );
-  if (!decodeOldRefreshToken) {
-    throw new ApiError(403, "Invalid Request");
-  }
-  const user = await User.findById(decodeOldRefreshToken._id);
-  if (!user) {
-    throw new ApiError(403, "Invalid Request");
-  }
-  if (oldRefreshToken !== user.refreshToken) {
-    throw new ApiError(403, "Invalid Request");
-  }
-  const newRefreshToken = await user.generateRefreshToken();
-  const newAccessToken = await user.generateAccessToken();
-  const response = {
-    userName: user.userName,
-    newAccessToken,
-    newRefreshToken,
-  };
+  const response=await handleTokenRegeneration(oldRefreshToken)
+
   res.status(200).json(new ApiResponse(200, response, "New token generated"));
 });
