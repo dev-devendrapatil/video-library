@@ -125,7 +125,34 @@ export const changePassword=asyncHandler(async (req,res,next) => {
     user.save()
     res.status(201).json(new ApiResponse(201,user,"Password changed successfully"))
   })
-
+export const userDetails = asyncHandler(async (req,res,next) => {
+  if(!req.user){
+    throw new ApiError(400,"Error while retrieving user details")
+  }
+  res.status(200).json(new ApiResponse(200,req.user,"User details fetch successfully"))
+})
+export const updateUser = asyncHandler(async (req,res,params) => {
+  const {userName,email,fullName}=req.body
+  if([userName,email,fullName].every((item)=>item?.trim().length==0||!item)){
+    throw new ApiError(400,"No fields received for edit")
+  }
+  const user = await User.findById(req.user._id).select("-password -refreshToken")
+  if(!user){
+    throw new ApiError(400,"Problem while updating the user")
+  }
+  if(userName&&userName?.trim().length!==0){
+    user.userName=userName
+  }
+  if(email&&email?.trim().length!==0){
+    user.email=email
+  }
+  if(fullName&&fullName?.trim().length!==0){
+    user.fullName=fullName
+  }
+  console.log(user)
+  await user.save()
+  res.status(201).json(new ApiResponse(201,user,"User updated successfully"))
+})
 export const regenerateAccessToken = asyncHandler(async(req,res,next)=>{
 
     const oldRefreshToken=req.body?.refreshToken||req.cookies.refreshToken;
