@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { ApiError } from "../../utils/ApiError.js";
-import { User } from "../../models/user.modal.js";
+import { User } from "../../models/user.model.js";
 
 const handleTokenRegeneration = async (oldRefreshToken) => {
       const decodeOldRefreshToken = jwt.decode(

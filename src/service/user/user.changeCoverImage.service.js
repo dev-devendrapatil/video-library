@@ -1,4 +1,4 @@
-import { User } from "../../models/user.modal.js";
+import { User } from "../../models/user.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { deleteImageFromUrl, uploadOnCloudinary } from "../../utils/cloudnary.js";
 

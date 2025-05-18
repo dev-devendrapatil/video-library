@@ -1,10 +1,8 @@
-import { User } from "../models/user.modal.js";
 import handleRegistration from "../service/user/user.register.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import { deleteImageFromUrl, uploadOnCloudinary } from "../utils/cloudnary.js";
-import jwt from "jsonwebtoken";
+
 import { userSchemaValidator } from "../validators/user/user.register.validator.js";
 import handleLogin from "../service/user/user.login.service.js";
 import { loginValidator } from "../validators/user/user.login.validator.js";
