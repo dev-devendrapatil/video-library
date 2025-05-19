@@ -18,9 +18,7 @@ import { User } from "../models/user.model.js";
 import getChannel from "../service/user/user.getChannel.service.js";
 import getUserHistory from "../service/user/user.getHistory.service.js";
 export const registerUser = asyncHandler(async (req, res, next) => {
-  if (!req?.files?.avatar[0]?.path) {
-    throw new ApiError(400, "avatar is required");
-  }
+
   const { error, value } = userSchemaValidator.validate(req.body);
   if (error) {
     throw new ApiError(400, error.details[0].message);
@@ -34,7 +32,7 @@ export const registerUser = asyncHandler(async (req, res, next) => {
   );
   res
     .status(201)
-    .json(new ApiResponse(200, newUser, "User registered successfully"));
+    .json(new ApiResponse(200, newUser, `Welcome ${newUser.userName} please login`));
 });
 
 export const loginUser = asyncHandler(async (req, res, next) => {

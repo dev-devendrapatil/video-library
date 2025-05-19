@@ -17,15 +17,16 @@ const { fullName, userName, email, password } = body;
   if (isUserAlreadyExist) {
     throw new ApiError(400, "User already exists");
   }
+let avatar={url:""},coverImage={url:""}
+  if(avatarLocalPath){
+       avatar = await uploadOnCloudinary(avatarLocalPath);
 
-  if (!avatarLocalPath) {
-    throw new ApiError(400, "Avatar is required");
   }
-  const avatar = await uploadOnCloudinary(avatarLocalPath);
-  const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-  if (!avatar) {
-    throw new ApiError(400, "Avatar is required");
+  if(coverImage){
+   coverImage = await uploadOnCloudinary(coverImageLocalPath);
+
   }
+  
   const user = await new User({
     fullName,
     avatar: avatar.url,
