@@ -2,7 +2,7 @@ import { User } from "../../models/user.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 
 const handleUpdateUser = async (body,user) => {
-    const { userName, email, fullName } = body;
+    const { userName, email, fullName ,description} = body;
   const currentUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
@@ -17,6 +17,9 @@ const handleUpdateUser = async (body,user) => {
   }
   if (fullName && fullName?.trim().length !== 0) {
     currentUser.fullName = fullName;
+  }
+  if(description&&description?.trim().length!==0){
+    currentUser.description=description
   }
   await currentUser.save();
   return currentUser

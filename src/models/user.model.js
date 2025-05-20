@@ -7,7 +7,7 @@ const userSchema = new Schema(
       type: String,
       required: true,
       lowercase: true,
-      unique: true,
+      unique: [true,"Username is not available"],
       trim: true,
     },
     email: {
@@ -36,6 +36,11 @@ const userSchema = new Schema(
           ref: "Video",
         },
       ],
+    },
+    description:{
+      type:String,
+      trim:true,
+      maxLength:250
     },
     password: {
       type: String,
