@@ -13,8 +13,6 @@ import handleUpdateUser from "../service/user/user.update.service.js";
 import { handleAvatarChange } from "../service/user/user.changeAvatar.service.js";
 import handleCoverImageChange from "../service/user/user.changeCoverImage.service.js";
 import handleTokenRegeneration from "../service/user/user.tokenRegeneration.service.js";
-import mongoose from "mongoose";
-import { User } from "../models/user.model.js";
 import getChannel from "../service/user/user.getChannel.service.js";
 import getUserHistory from "../service/user/user.getHistory.service.js";
 export const registerUser = asyncHandler(async (req, res, next) => {
