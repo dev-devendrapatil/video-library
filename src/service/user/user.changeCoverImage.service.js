@@ -16,7 +16,7 @@ import { deleteImageFromUrl, uploadOnCloudinary } from "../../utils/cloudnary.js
   }
   currentUser.coverImage = newCoverImage.url;
   await currentUser.save();
-  deleteImageFromUrl(oldCoverImageServerPath);
+  deleteImageFromUrl(oldCoverImageServerPath,"image");
   return currentUser
 }
 export default handleCoverImageChange

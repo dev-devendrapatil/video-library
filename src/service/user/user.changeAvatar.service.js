@@ -16,7 +16,7 @@ export const handleAvatarChange= async (user,newAvatarLocalFilePath,oldAvatarSer
   currentUser.avatar = newAvatarOnServer.url;
   await currentUser.save();
   if (oldAvatarServerFilePath) {
-    deleteImageFromUrl(oldAvatarServerFilePath);
+    deleteImageFromUrl(oldAvatarServerFilePath,"image");
   }
   return currentUser
 }
