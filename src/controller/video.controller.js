@@ -72,6 +72,6 @@ export const getVideoById = asyncHandler(async (req, res) => {
   if (!id) {
     throw new ApiError(400, "Invalid request");
   }
-  const video = await handleVideoById(id);
+  const video = await handleVideoById(id,req.user._id);
   res.status(200).json(new ApiResponse(200, video, "Video fetch successfully"));
 });
