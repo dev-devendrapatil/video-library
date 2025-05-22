@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { auth } from "../middleware/auth.middleware.js";
-import { uploadNewVideo } from "../controller/video.controller.js";
+import { deleteVideoById, getVideoById, updateVideo, uploadNewVideo, userVideos } from "../controller/video.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
 import multer from "multer";
 
@@ -22,3 +22,7 @@ const videoUpload = (req, res, next) => {
   });
 };
 videoRouter.post("/newVideo", auth, videoUpload, uploadNewVideo);
+videoRouter.get('/userVideos',auth,userVideos)
+videoRouter.get('/video/:id',auth,getVideoById)
+videoRouter.patch('/updateVideo/:id',auth,videoUpload,updateVideo)
+videoRouter.delete("/deleteVideo/:id",auth,deleteVideoById)
