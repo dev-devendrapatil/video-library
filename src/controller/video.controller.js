@@ -8,6 +8,12 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { updateVideoValidator } from "../validators/video/video.update.validator.js";
 import { newVideoValidator } from "../validators/video/video.uploadNewVideo.validator.js";
 import { handleVideoById } from "../service/video/video.findById.js";
+import { User } from "../models/user.model.js";
+import { Like } from "../models/like.modal.js";
+import { Video } from "../models/video.model.js";
+import mongoose from "mongoose";
+import { Subscription } from "../models/subscription.model.js";
+import { handleGetReaction } from "../service/video/video.reaction.js";
 
 export const uploadNewVideo = asyncHandler(async (req, res) => {
   const thumbnailLocalPath = req?.files?.thumbnail[0]?.path;
@@ -74,4 +80,12 @@ export const getVideoById = asyncHandler(async (req, res) => {
   }
   const video = await handleVideoById(id,req.user._id);
   res.status(200).json(new ApiResponse(200, video, "Video fetch successfully"));
+});
+
+
+export const getVideoReactions = asyncHandler(async (req, res) => {
+  const { id } = req.params; // videoId
+  const userId = req.user?._id;
+  const response = await handleGetReaction(id,userId)
+  res.status(200).json(new ApiResponse(200,response,"fetch reaction successfully"));
 });

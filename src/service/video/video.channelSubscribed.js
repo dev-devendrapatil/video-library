@@ -11,8 +11,13 @@ export const isChannelSubscribed = async (id,userId) => {
     subscriber:userId,
     channel:id
   })
+  const subscriberCount = await Subscription.countDocuments({
+        channel:id
+
+  })
   const response = {
-    isSubscribed : isUserSubscribed?true:false
+    isSubscribed : isUserSubscribed?true:false,
+    totalSubscriber:subscriberCount
   }
   return response
 }

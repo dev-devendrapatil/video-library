@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { auth } from "../middleware/auth.middleware.js";
-import { deleteVideoById, getVideoById, updateVideo, uploadNewVideo, userVideos } from "../controller/video.controller.js";
+import { deleteVideoById, getVideoById, getVideoReactions, updateVideo, uploadNewVideo, userVideos } from "../controller/video.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
 import multer from "multer";
 import { isUserSubscribedToChannel } from "../controller/subscription.controller.js";
@@ -28,3 +28,4 @@ videoRouter.get('/video/:id',auth,getVideoById)
 videoRouter.patch('/updateVideo/:id',auth,videoUpload,updateVideo)
 videoRouter.delete("/deleteVideo/:id",auth,deleteVideoById)
 videoRouter.get('/isSubscribed/:id',auth,isUserSubscribedToChannel)
+videoRouter.get('/reaction/:id',auth,getVideoReactions)
