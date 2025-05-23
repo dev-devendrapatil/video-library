@@ -1,12 +1,13 @@
-import mongoose from "mongoose";
-import { Subscription } from "../models/subscription.model.js";
-import { User } from "../models/user.model.js";
+
 import { handleSubscription } from "../service/subscription/subscription.handle.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { handleSubscribedChannel } from "../service/subscription/subscription.channel.service.js";
 import { handleSubscribedUser } from "../service/subscription/subscription.user.service.js";
+import { User } from "../models/user.model.js";
+import { Subscription } from "../models/subscription.model.js";
+import { isChannelSubscribed } from "../service/video/video.channelSubscribed.js";
 
 export const toggleSubscribeChannel = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -40,3 +41,11 @@ export const getAllSubscribedUsers = asyncHandler(async (req, res) => {
       new ApiResponse(200, response, "Successfully fetch all subscribed users")
     );
 });
+export const isUserSubscribedToChannel = asyncHandler(async (req,res) => {
+  const {id} = req.params
+  if(!id){
+    throw new ApiError(400,"Invalid request")
+  }
+  const response = await isChannelSubscribed(id,req.user._id)
+  res.status(200).json(new ApiResponse(200,response,"Details fetch successfully"))
+})
