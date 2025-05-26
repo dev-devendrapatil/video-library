@@ -1,13 +1,13 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
-import  jwt  from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 const userSchema = new Schema(
   {
     userName: {
       type: String,
       required: true,
       lowercase: true,
-      unique: [true,"Username is not available"],
+      unique: [true, "Username is not available"],
       trim: true,
     },
     email: {
@@ -29,18 +29,17 @@ const userSchema = new Schema(
     coverImage: {
       type: String,
     },
-    watchHistory: {
-      type: [
-        {
-          type: Schema.Types.ObjectId,
-          ref: "Video",
-        },
-      ],
-    },
-    description:{
-      type:String,
-      trim:true,
-      maxLength:250
+watchHistory: [
+  {
+    video: { type: Schema.Types.ObjectId, ref: "Video" },
+    visitedAt: { type: Date, default: Date.now },
+  }
+],
+
+    description: {
+      type: String,
+      trim: true,
+      maxLength: 250,
     },
     password: {
       type: String,
@@ -82,7 +81,6 @@ userSchema.methods.generateRefreshToken = async function () {
   return await jwt.sign(
     {
       _id: this._id,
- 
     },
     process.env.APP_REFRESH_TOKEN_SECRET,
     {

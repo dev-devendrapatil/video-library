@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { Video } from "../../models/video.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { Subscription } from "../../models/subscription.model.js";
+import { User } from "../../models/user.model.js";
 
 export const handleVideoById = async (id, userId) => {
   const session = await mongoose.startSession();
@@ -50,6 +51,27 @@ export const handleVideoById = async (id, userId) => {
   } finally {
     session.endSession();
   }
+const user = await User.findById(userId);
+
+// Convert id to string to avoid ObjectId comparison issues
+const videoIdStr = id.toString();
+
+const existingIndex = user.watchHistory.findIndex(
+  (item) => item.video.toString() === videoIdStr
+);
+
+if (existingIndex !== -1) {
+  // Update visitedAt if video already exists in history
+  user.watchHistory[existingIndex].visitedAt = new Date();
+} else {
+  // Add new entry to watch history
+  user.watchHistory.push({
+    video: id,
+    visitedAt: new Date(),
+  });
+}
+
+await user.save();
 
   // 🚨 After session ends, handle result
   if (!video || video.length === 0) {

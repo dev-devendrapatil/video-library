@@ -148,6 +148,6 @@ export const getChannelProfile = asyncHandler(async (req, res, next) => {
 
 export const getWatchHistory = asyncHandler(async (req, res, next) => {
  const userHistory = await getUserHistory(req.user.id)
-
-  res.status(200).json(new ApiResponse(200,userHistory,"watch history fetch successfully"))
+const sortedHistory = userHistory.sort((a,b)=>a.visitedAt=b.visitedAt)
+  res.status(200).json(new ApiResponse(200,sortedHistory,"watch history fetch successfully"))
 });
