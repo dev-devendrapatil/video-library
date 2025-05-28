@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changePassword, getChannelProfile, getWatchHistory, loginUser, logoutUser, regenerateAccessToken, registerUser, updateAvatar, updateCoverImage, updateUser, userDetails } from "../controller/user.controller.js";
+import { changePassword, channelDetails, getChannelProfile, getWatchHistory, loginUser, logoutUser, regenerateAccessToken, registerUser, updateAvatar, updateCoverImage, updateUser, userDetails } from "../controller/user.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
 import { auth } from "../middleware/auth.middleware.js";
 
@@ -29,4 +29,5 @@ userRouter.patch('/updateAvatar',auth,upload.single('avatar'),updateAvatar)
 userRouter.patch('/updateCoverImage',auth,upload.single('coverImage'),updateCoverImage)
 userRouter.get('/channel/:userName',auth,getChannelProfile)
 userRouter.get('/history',auth,getWatchHistory)
+userRouter.get('/channelDetails/:id',auth,channelDetails)
   

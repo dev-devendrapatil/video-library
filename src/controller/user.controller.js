@@ -15,6 +15,9 @@ import handleCoverImageChange from "../service/user/user.changeCoverImage.servic
 import handleTokenRegeneration from "../service/user/user.tokenRegeneration.service.js";
 import getChannel from "../service/user/user.getChannel.service.js";
 import getUserHistory from "../service/user/user.getHistory.service.js";
+import { User } from "../models/user.model.js";
+import mongoose from "mongoose";
+import { Subscription } from "../models/subscription.model.js";
 export const registerUser = asyncHandler(async (req, res, next) => {
 
   const { error, value } = userSchemaValidator.validate(req.body);
@@ -150,4 +153,60 @@ export const getWatchHistory = asyncHandler(async (req, res, next) => {
  const userHistory = await getUserHistory(req.user.id)
 const sortedHistory = userHistory.sort((a,b)=>a.visitedAt=b.visitedAt)
   res.status(200).json(new ApiResponse(200,sortedHistory,"watch history fetch successfully"))
+});
+export const channelDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    throw new ApiError(400, "ID required");
+  }
+
+  // Aggregate channel details and videos in one go
+  const channelDetails = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos", // MongoDB collection name (usually lowercase plural)
+        localField: "_id",
+        foreignField: "owner",
+        as: "videos",
+      },
+    },
+    {
+      $project: {
+        userName: 1,
+        avatar: 1,
+        description: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        videos: {
+          _id: 1,
+          thumbnail: 1,
+          title: 1,
+          duration: 1,
+          views: 1,
+          createdAt: 1,
+        },
+      },
+    },
+  ]);
+
+  if (channelDetails.length === 0) {
+    throw new ApiError(404, "Channel not found");
+  }
+
+  // Get total subscribers count for this channel
+  const totalSubscribers = await Subscription.countDocuments({ channel: id });
+
+  // Add subscriber count to response
+  const channelData = {
+    ...channelDetails[0],
+    totalSubscribers,
+  };
+
+  res.json(new ApiResponse(200, channelData, "Details fetched successfully"));
 });

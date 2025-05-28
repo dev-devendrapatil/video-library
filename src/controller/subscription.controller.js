@@ -8,6 +8,7 @@ import { handleSubscribedUser } from "../service/subscription/subscription.user.
 import { User } from "../models/user.model.js";
 import { Subscription } from "../models/subscription.model.js";
 import { isChannelSubscribed } from "../service/video/video.channelSubscribed.js";
+import mongoose from "mongoose";
 
 export const toggleSubscribeChannel = asyncHandler(async (req, res) => {
   const { id } = req.params;
