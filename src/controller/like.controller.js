@@ -1,5 +1,6 @@
 import { Like } from "../models/like.modal.js";
 import { handleToggleReaction } from "../service/Like/like.toggleReaction.service.js";
+import { getLikedVideos } from "../service/Like/like.videos.service.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
@@ -21,17 +22,6 @@ export const likedVideo =  asyncHandler(async (req,res) => {
   if(!userId){
     throw new ApiError(400,"Invalid request")
   }
-  const likedVideos = await Like.find({
-    likeBy:userId,
-    type:"like"
-
-  }).populate({path:'video',
-  populate: {
-    path: "owner",
-    model: "User",
-    select: "-password -refreshToken -watchHistory", // exclude sensitive fields
-  },
-  }
-  )
+const likedVideos=await getLikedVideos(userId)
   res.status(200).json(new ApiResponse(200,likedVideos,"Liked video fetch successfully"))
 })
