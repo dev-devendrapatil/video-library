@@ -37,7 +37,7 @@ const feed = await Video.aggregatePaginate(
   ],
   {
     page: parseInt(page) || 1,
-    limit: 1,
+    limit: 18,
   }
 );
 
